@@ -29,10 +29,10 @@ function verifyWebhookSignature(payload: string, signature?: string): boolean {
 }
 
 // Handle different notification types
-async function handleNotification(notification: Notification, organizationId: string): Promise<void> {
-  const { type, action } = notification;
+async function handleNotification(notification: Notification, _organizationId: string): Promise<void> {
+  const { type } = notification;
   
-  console.log(`Received notification: ${type} - ${action}`);
+  console.log(`Received notification: ${type}`);
   
   // Get the Linear client for this organization
   // In production, you would retrieve the token from your database
@@ -45,7 +45,7 @@ async function handleNotification(notification: Notification, organizationId: st
   const linearClient = new LinearClient({ accessToken: token });
   
   // Handle different notification types
-  switch (action) {
+  switch (type) {
     case NotificationType.IssueMention:
     case NotificationType.IssueCommentMention:
       await handleMention(notification, linearClient);
@@ -57,7 +57,7 @@ async function handleNotification(notification: Notification, organizationId: st
       
     // Add more handlers for other notification types
     default:
-      console.log(`No handler for notification type: ${action}`);
+      console.log(`No handler for notification type: ${type}`);
   }
 }
 
@@ -142,7 +142,7 @@ export async function handleWebhook(req: WebhookRequest, res: Response): Promise
     return;
   }
   
-  const { type, action, organizationId, appUserId, notification } = req.body;
+  const { type, organizationId, appUserId, notification } = req.body;
   
   // Check if this notification is for our app user
   if (type === 'AppUserNotification' && appUserId === LINEAR_APP_USER_ID) {

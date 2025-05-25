@@ -40,8 +40,7 @@ async function setupWebhook(): Promise<void> {
       }
       
       try {
-        // Get the current application
-        const apiKeys = await linearClient.apiKeys();
+        // Find the OAuth application
         const clientId = LINEAR_CLIENT_ID;
         
         // Find the OAuth application
