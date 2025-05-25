@@ -58,8 +58,10 @@ async function setupWebhook(): Promise<void> {
       const clientId = LINEAR_CLIENT_ID;
       
       // Find the OAuth application
+      // @ts-ignore - The LinearClient type definitions don't include oauthApplications method
       const oauthApps = await linearClient.oauthApplications();
-      const app = oauthApps.nodes.find(app => app.clientId === clientId);
+      // @ts-ignore - Using any type for app since we don't have proper type definitions
+      const app: any = oauthApps.nodes.find((app: any) => app.clientId === clientId);
       
       if (!app) {
         console.error(`Could not find OAuth application with client ID: ${clientId}`);
@@ -93,4 +95,3 @@ if (require.main === module) {
 }
 
 export { setupWebhook };
-
