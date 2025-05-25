@@ -54,7 +54,7 @@ export function setupAuthRoutes(app: Express): void {
         })
       });
 
-      const tokenData = await tokenResponseon() as TokenData;
+      const tokenData = await tokenResponse.json() as TokenData;
       
       if ('error' in tokenData) {
         return res.status(400).send(`Error: ${tokenData.error}`);
@@ -96,10 +96,9 @@ export function setupAuthRoutes(app: Express): void {
     const token = tokens[orgId];
     
     if (!token) {
-      return res.status(404)on({ error: 'Token not found for this organization' });
+      return res.status(404).json({ error: 'Token not found for this organization' });
     }
     
-    reson({ token });
+    res.json({ token });
   });
 }
-
