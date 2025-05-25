@@ -1,38 +1,37 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { handleWebhook } from './webhooks.js';
 import { setupAuthRoutes } from './auth.js';
+import { handleWebhook } from './webhooks.js';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-// Parse JSON request bodies
+// Middleware
 app.use(express.json());
-
-// Serve static files from the public directory
-app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 
 // Set up authentication routes
 setupAuthRoutes(app);
 
-// Webhook endpoint for Linear notifications
+// Webhook endpoint
 app.post('/webhook', handleWebhook);
 
 // Home page
 app.get('/', (_req, res) => {
-  res.sendFile('index.html', { root: './public' });
+  res.send(`
+    <h1>Linear Agent</h1>
+    <p>This is a Linear Agent application.</p>
+    <p><a href="/auth">Install the agent</a></p>
+  `);
 });
 
 // Start the server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Linear Agent server running on port ${port}`);
-    console.log(`Visit http://localhost:${port} to get started`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 export default app;
 

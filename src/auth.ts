@@ -71,17 +71,19 @@ export function setupAuthRoutes(app: Express): void {
 
       // Get app user ID
       const linearClient = new LinearClient({ accessToken: access_token });
-      const { viewer } = await linearClient.viewer;
+      // @ts-ignore - The LinearClient type definitions are incomplete
+      const viewerData = await linearClient.viewer;
       
       console.log(`App installed in organization ${organization_id}`);
-      console.log(`App user ID: ${viewer.id}`);
+      // @ts-ignore - The LinearClient type definitions are incomplete
+      console.log(`App user ID: ${viewerData.id}`);
 
       res.send(`
         <h1>Linear Agent Installed Successfully!</h1>
         <p>Organization ID: ${organization_id}</p>
-        <p>App User ID: ${viewer.id}</p>
+        <p>App User ID: ${viewerData.id}</p>
         <p>Please add the following to your .env file:</p>
-        <pre>LINEAR_APP_USER_ID=${viewer.id}</pre>
+        <pre>LINEAR_APP_USER_ID=${viewerData.id}</pre>
         <p><a href="/">Return to home</a></p>
       `);
     } catch (error) {

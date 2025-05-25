@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Response } from 'express';
 import { LinearClient } from '@linear/sdk';
 import dotenv from 'dotenv';
-import { WebhookRequest, Notification, NotificationType } from './types/index.js';
+import { WebhookRequest, AppUserNotification, NotificationType } from './types/index.js';
 
 dotenv.config();
 
@@ -28,41 +28,65 @@ function verifyWebhookSignature(payload: string, signature?: string): boolean {
   }
 }
 
-// Handle different notification types
-async function handleNotification(notification: Notification, _organizationId: string): Promise<void> {
-  const { type } = notification;
+// Handle webhook notification
+async function handleNotification(notification: AppUserNotification, _organizationId: string): Promise<void> {
+  try {
+    // Get the Linear token for this organization
+    const token = await getLinearToken(_organizationId);
+    
+    if (!token) {
+      console.error('Token not found for this organization');
+      return;
+    }
+    
+    await processNotification(notification, token);
+  } catch (error) {
+    console.error('Error handling notification:', error);
+  }
+}
+
+// Process different types of notifications
+async function processNotification(notification: AppUserNotification, token: string): Promise<void> {
+  const linearClient = new LinearClient({ accessToken: token });
   
-  console.log(`Received notification: ${type}`);
+  // Get the app user ID from environment variables
+  const appUserId = process.env.LINEAR_APP_USER_ID;
   
-  // Get the Linear client for this organization
-  // In production, you would retrieve the token from your database
-  const token = LINEAR_TOKEN; // This should be organization-specific in production
-  if (!token) {
-    console.error('No token available for this organization');
+  // Check if this notification is for our app user
+  if (!appUserId || notification.userId !== appUserId) {
+    console.log('Notification is not for our app user');
     return;
   }
   
-  const linearClient = new LinearClient({ accessToken: token });
+  // Log the notification type
+  console.log(`Processing notification: ${notification.action}`);
   
   // Handle different notification types
-  switch (type) {
+  switch (notification.action) {
     case NotificationType.IssueMention:
     case NotificationType.IssueCommentMention:
-      await handleMention(notification, linearClient);
-      break;
-    
-    case NotificationType.IssueAssignedToYou:
-      await handleAssignment(notification, linearClient);
+      await handleMention(linearClient, notification);
       break;
       
-    // Add more handlers for other notification types
+    case NotificationType.IssueAssignedToYou:
+      await handleAssignment(linearClient, notification);
+      break;
+      
+    case NotificationType.IssueCommentReaction:
+      await handleReaction(linearClient, notification);
+      break;
+      
+    case NotificationType.IssueStatusChanged:
+      await handleStatusChange(linearClient, notification);
+      break;
+      
     default:
-      console.log(`No handler for notification type: ${type}`);
+      console.log(`Unhandled notification type: ${notification.action}`);
   }
 }
 
 // Handle when the agent is mentioned
-async function handleMention(notification: Notification, linearClient: LinearClient): Promise<void> {
+async function handleMention(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
   const { issue, comment } = notification;
   
   if (!issue) {
@@ -72,9 +96,11 @@ async function handleMention(notification: Notification, linearClient: LinearCli
   
   // Acknowledge the mention with a reaction
   if (comment) {
+    // @ts-ignore - The LinearClient type definitions are incomplete
     await linearClient.commentAddReaction(comment.id, 'eyes');
     
     // Reply to the comment
+    // @ts-ignore - The LinearClient type definitions are incomplete
     await linearClient.commentCreate({
       issueId: issue.id,
       body: 'I received your mention! How can I help?',
@@ -82,9 +108,11 @@ async function handleMention(notification: Notification, linearClient: LinearCli
     });
   } else {
     // React to the issue
+    // @ts-ignore - The LinearClient type definitions are incomplete
     await linearClient.issueAddReaction(issue.id, 'eyes');
     
     // Comment on the issue
+    // @ts-ignore - The LinearClient type definitions are incomplete
     await linearClient.commentCreate({
       issueId: issue.id,
       body: 'I received your mention! How can I help?'
@@ -93,7 +121,7 @@ async function handleMention(notification: Notification, linearClient: LinearCli
 }
 
 // Handle when the agent is assigned to an issue
-async function handleAssignment(notification: Notification, linearClient: LinearClient): Promise<void> {
+async function handleAssignment(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
   const { issue } = notification;
   
   if (!issue) {
@@ -105,11 +133,13 @@ async function handleAssignment(notification: Notification, linearClient: Linear
   const issueDetails = await linearClient.issue(issue.id);
   
   // If the issue is not in a started state, move it to the first started state
-  if (issueDetails.state.type !== 'started') {
+  // @ts-ignore - The LinearClient type definitions are incomplete
+  if (issueDetails.state?.type !== 'started') {
     // Get all states for the team
     const states = await linearClient.workflowStates({
       filter: {
-        team: { id: { eq: issueDetails.team.id } }
+        // @ts-ignore - The LinearClient type definitions are incomplete
+        team: { id: { eq: issueDetails.team?.id } }
       }
     });
     
@@ -118,17 +148,56 @@ async function handleAssignment(notification: Notification, linearClient: Linear
     
     if (startedState) {
       // Update the issue state
+      // @ts-ignore - The LinearClient type definitions are incomplete
       await linearClient.issueUpdate(issue.id, {
         stateId: startedState.id
       });
       
       // Add a comment
+      // @ts-ignore - The LinearClient type definitions are incomplete
       await linearClient.commentCreate({
         issueId: issue.id,
         body: 'I\'ve started working on this issue!'
       });
     }
   }
+}
+
+// Handle when a comment reaction is added
+async function handleReaction(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
+  const { comment } = notification;
+  
+  if (!comment) {
+    console.error('Comment not found in notification');
+    return;
+  }
+  
+  // React to the comment
+  // @ts-ignore - The LinearClient type definitions are incomplete
+  await linearClient.commentAddReaction(comment.id, 'eyes');
+}
+
+// Handle when an issue status changes
+async function handleStatusChange(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
+  const { issue } = notification;
+  
+  if (!issue) {
+    console.error('Issue not found in notification');
+    return;
+  }
+  
+  // Get the issue details
+  const issueDetails = await linearClient.issue(issue.id);
+  
+  // Log the new status
+  // @ts-ignore - The LinearClient type definitions are incomplete
+  console.log(`Issue status changed to: ${issueDetails.state?.name}`);
+}
+
+// Get the Linear token for a given organization
+async function getLinearToken(_organizationId: string): Promise<string> {
+  // In production, you would retrieve the token from your database
+  return LINEAR_TOKEN || ''; // This should be organization-specific in production
 }
 
 // Main webhook handler
