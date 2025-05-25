@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Response } from 'express';
 import { LinearClient } from '@linear/sdk';
 import dotenv from 'dotenv';
-import { WebhookRequest, Notification, NotificationType } from './types/index';
+import { WebhookRequest, Notification, NotificationType, AppUserNotification } from './types/index';
 
 dotenv.config();
 
@@ -28,41 +28,91 @@ function verifyWebhookSignature(payload: string, signature?: string): boolean {
   }
 }
 
-// Handle different notification types
-async function handleNotification(notification: Notification, organizationId: string): Promise<void> {
-  const { type, action } = notification;
+// Handle webhook notifications
+export async function handleWebhook(req: Request, res: Response): Promise<void> {
+  const webhookReq = req as WebhookRequest;
+  const signature = webhookReq.headers['linear-signature'];
+  const payload = webhookReq.body;
   
-  console.log(`Received notification: ${type} - ${action}`);
-  
-  // Get the Linear client for this organization
-  // In production, you would retrieve the token from your database
-  const token = LINEAR_TOKEN; // This should be organization-specific in production
-  if (!token) {
-    console.error('No token available for this organization');
+  // Verify webhook signature
+  if (!verifyWebhookSignature(signature, JSON.stringify(payload))) {
+    res.status(401).send('Invalid webhook signature');
     return;
   }
   
+  // Check if this is an app user notification
+  if (payload.type !== 'AppUserNotification') {
+    res.status(200).send('Not an app user notification');
+    return;
+  }
+  
+  try {
+    // Get the Linear token for this organization
+    const token = await getLinearToken(payload.organizationId);
+    
+    if (!token) {
+      res.status(404).send('Token not found for this organization');
+      return;
+    }
+    
+    // Process the notification
+    await processNotification(payload, token);
+    
+    res.status(200).send('Webhook processed');
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).send('Error processing webhook');
+  }
+}
+
+// Process different types of notifications
+async function processNotification(notification: AppUserNotification, token: string): Promise<void> {
+  const { action } = notification;
   const linearClient = new LinearClient({ accessToken: token });
   
+  // Get the app user ID from environment variables
+  const appUserId = process.env.LINEAR_APP_USER_ID;
+  
+  if (!appUserId) {
+    console.error('LINEAR_APP_USER_ID environment variable is not set');
+    return;
+  }
+  
+  // Only process notifications for our app user
+  if (notification.appUserId !== appUserId) {
+    console.log('Notification is not for our app user');
+    return;
+  }
+  
+  // Log the notification type
+  console.log(`Processing notification: ${notification.action}`);
+  
   // Handle different notification types
-  switch (action) {
+  switch (notification.action) {
     case NotificationType.IssueMention:
     case NotificationType.IssueCommentMention:
-      await handleMention(notification, linearClient);
-      break;
-    
-    case NotificationType.IssueAssignedToYou:
-      await handleAssignment(notification, linearClient);
+      await handleMention(linearClient, notification);
       break;
       
-    // Add more handlers for other notification types
+    case NotificationType.IssueAssignedToYou:
+      await handleAssignment(linearClient, notification);
+      break;
+      
+    case NotificationType.IssueCommentReaction:
+      await handleReaction(linearClient, notification);
+      break;
+      
+    case NotificationType.IssueStatusChanged:
+      await handleStatusChange(linearClient, notification);
+      break;
+      
     default:
-      console.log(`No handler for notification type: ${action}`);
+      console.log(`Unhandled notification type: ${notification.action}`);
   }
 }
 
 // Handle when the agent is mentioned
-async function handleMention(notification: Notification, linearClient: LinearClient): Promise<void> {
+async function handleMention(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
   const { issue, comment } = notification;
   
   if (!issue) {
@@ -93,7 +143,7 @@ async function handleMention(notification: Notification, linearClient: LinearCli
 }
 
 // Handle when the agent is assigned to an issue
-async function handleAssignment(notification: Notification, linearClient: LinearClient): Promise<void> {
+async function handleAssignment(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
   const { issue } = notification;
   
   if (!issue) {
@@ -131,6 +181,41 @@ async function handleAssignment(notification: Notification, linearClient: Linear
   }
 }
 
+// Handle when a comment reaction is added
+async function handleReaction(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
+  const { comment } = notification;
+  
+  if (!comment) {
+    console.error('Comment not found in notification');
+    return;
+  }
+  
+  // React to the comment
+  await linearClient.commentAddReaction(comment.id, 'eyes');
+}
+
+// Handle when an issue status changes
+async function handleStatusChange(linearClient: LinearClient, notification: AppUserNotification): Promise<void> {
+  const { issue } = notification;
+  
+  if (!issue) {
+    console.error('Issue not found in notification');
+    return;
+  }
+  
+  // Get the issue details
+  const issueDetails = await linearClient.issue(issue.id);
+  
+  // Log the new status
+  console.log(`Issue status changed to: ${issueDetails.state.name}`);
+}
+
+// Get the Linear token for a given organization
+async function getLinearToken(organizationId: string): Promise<string> {
+  // In production, you would retrieve the token from your database
+  return LINEAR_TOKEN; // This should be organization-specific in production
+}
+
 // Main webhook handler
 export async function handleWebhook(req: WebhookRequest, res: Response): Promise<void> {
   const signature = req.headers['linear-signature'];
@@ -158,4 +243,3 @@ export async function handleWebhook(req: WebhookRequest, res: Response): Promise
     res.status(200).send('Webhook ignored');
   }
 }
-
