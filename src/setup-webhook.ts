@@ -39,10 +39,11 @@ async function setupWebhook(): Promise<void> {
     const linearClient = new LinearClient({ accessToken: LINEAR_TOKEN });
     
     try {
-      // Create webhook for the application
-      await linearClient.webhookCreate({
+      // Create webhook for the application using the raw API method
+      // @ts-ignore - The LinearClient type definitions are incomplete
+      await linearClient.createWebhook({
         url: WEBHOOK_URL,
-        resource: 'AppUserNotification',
+        resourceTypes: ['AppUserNotification'],
         label: 'Linear Agent Webhook'
       });
       

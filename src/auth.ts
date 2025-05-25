@@ -2,7 +2,7 @@ import { Express, Request, Response } from 'express';
 import { LinearClient } from '@linear/sdk';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
-import { Tokens, TokenData } from './types/index';
+import { Tokens, TokenData } from './types/index.js';
 
 dotenv.config();
 
@@ -71,17 +71,17 @@ export function setupAuthRoutes(app: Express): void {
 
       // Get app user ID
       const linearClient = new LinearClient({ accessToken: access_token });
-      const { viewer } = await linearClient.viewer;
+      const viewerData = await linearClient.viewer;
       
       console.log(`App installed in organization ${organization_id}`);
-      console.log(`App user ID: ${viewer.id}`);
+      console.log(`App user ID: ${viewerData.id}`);
 
       res.send(`
         <h1>Linear Agent Installed Successfully!</h1>
         <p>Organization ID: ${organization_id}</p>
-        <p>App User ID: ${viewer.id}</p>
+        <p>App User ID: ${viewerData.id}</p>
         <p>Please add the following to your .env file:</p>
-        <pre>LINEAR_APP_USER_ID=${viewer.id}</pre>
+        <pre>LINEAR_APP_USER_ID=${viewerData.id}</pre>
         <p><a href="/">Return to home</a></p>
       `);
     } catch (error) {
@@ -102,3 +102,4 @@ export function setupAuthRoutes(app: Express): void {
     res.json({ token });
   });
 }
+
