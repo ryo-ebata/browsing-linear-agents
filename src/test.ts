@@ -18,11 +18,11 @@ async function testLinearConnection(): Promise<void> {
     console.log('Testing Linear API connection...');
     
     const linearClient = new LinearClient({ accessToken: LINEAR_TOKEN });
-    const { viewer } = await linearClient.viewer;
+    const viewerData = await linearClient.viewer;
     
     console.log('✅ Connection successful!');
-    console.log(`Connected as: ${viewer.name || viewer.id}`);
-    console.log(`Organization: ${viewer.organization.name}`);
+    console.log(`Connected as: ${viewerData.name || viewerData.id}`);
+    console.log(`Organization: ${viewerData.organization.name}`);
     
     // Test getting teams
     const teams = await linearClient.teams();
@@ -31,7 +31,7 @@ async function testLinearConnection(): Promise<void> {
       console.log(`- ${team.name} (${team.key})`);
     });
     
-    console.log('\nYour Linear Agent is ready to use!');
+    console.log('\nYour Linear Agent environment is set up correctly!');
   } catch (error) {
     console.error('❌ Connection failed:', error instanceof Error ? error.message : String(error));
     console.log('Please check your LINEAR_TOKEN and try again');
