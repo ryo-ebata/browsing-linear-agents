@@ -11,54 +11,51 @@ const rl = readline.createInterface({
 });
 
 // This script helps set up the webhook URL for your Linear application
-async function setupWebhook(organizationId: string, accessToken: string): Promise<void> {
+async function setupWebhook(): Promise<void> {
+  const { LINEAR_TOKEN, LINEAR_CLIENT_ID, LINEAR_WEBHOOK_URL } = process.env;
+  const WEBHOOK_URL = LINEAR_WEBHOOK_URL || '';
+  
+  if (!LINEAR_TOKEN) {
+    console.error('ERROR: LINEAR_TOKEN environment variable is not set');
+    console.log('Please set LINEAR_TOKEN in your .env file after installing the agent');
+    process.exit(1);
+  }
+  
+  if (!LINEAR_CLIENT_ID) {
+    console.error('ERROR: LINEAR_CLIENT_ID environment variable is not set');
+    console.log('Please set LINEAR_CLIENT_ID in your .env file');
+    process.exit(1);
+  }
+  
+  if (!WEBHOOK_URL) {
+    console.error('ERROR: LINEAR_WEBHOOK_URL environment variable is not set');
+    console.log('Please set LINEAR_WEBHOOK_URL in your .env file');
+    process.exit(1);
+  }
+  
   try {
-    const linearClient = new LinearClient({ accessToken });
+    console.log('Setting up webhook for your Linear application...');
     
-    // Get the OAuth application ID
-    const { nodes: applications } = await linearClient.oauthApplications();
-    const appId = applications[0]?.id;
+    const linearClient = new LinearClient({ accessToken: LINEAR_TOKEN });
     
-    if (!appId) {
-      console.error('No OAuth application found');
-      return;
+    try {
+      // Create webhook for the application
+      await linearClient.webhookCreate({
+        url: WEBHOOK_URL,
+        resource: 'AppUserNotification',
+        label: 'Linear Agent Webhook'
+      });
+      
+      console.log(`✅ Webhook created successfully at: ${WEBHOOK_URL}`);
+      console.log('Your Linear Agent is now ready to receive webhook notifications!');
+    } catch (error) {
+      console.error('❌ Failed to create webhook:', error instanceof Error ? error.message : String(error));
     }
-    
-    // Check if webhook already exists
-    const { nodes: webhooks } = await linearClient.webhooks();
-    const existingWebhook = webhooks.find(webhook => 
-      webhook.url === WEBHOOK_URL && webhook.resource === 'AppUserNotification'
-    );
-    
-    if (existingWebhook) {
-      console.log('Webhook already exists');
-      return;
-    }
-    
-    // Create webhook
-    const webhookSecret = process.env.LINEAR_WEBHOOK_SECRET;
-    
-    if (!webhookSecret) {
-      console.error('Missing LINEAR_WEBHOOK_SECRET environment variable');
-      return;
-    }
-    
-    // Get API keys for the application
-    // Note: This is unused but kept for future reference
-    // const apiKeys = await linearClient.apiKeys();
-    
-    // Create webhook for the application
-    await linearClient.webhookCreate({
-      url: WEBHOOK_URL,
-      resource: 'AppUserNotification',
-      secret: webhookSecret,
-      enabled: true,
-      label: 'Linear Agent Webhook'
-    });
-    
-    console.log('Webhook created successfully');
   } catch (error) {
-    console.error('Error setting up webhook:', error);
+    console.error('❌ Connection failed:', error instanceof Error ? error.message : String(error));
+    console.log('Please check your LINEAR_TOKEN and try again');
+  } finally {
+    rl.close();
   }
 }
 
@@ -68,3 +65,4 @@ if (require.main === module) {
 }
 
 export { setupWebhook };
+
