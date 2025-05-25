@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { handleWebhook } from './webhooks.ts';
-import { setupAuthRoutes } from './auth.ts';
+import { handleWebhook } from './webhooks';
+import { setupAuthRoutes } from './auth';
 
 // Load environment variables
 dotenv.config();
@@ -10,7 +10,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Parse JSON request bodies
-app.use(express.tson());
+app.use(expresson());
 
 // Serve static files from the public directory
 app.use(express.static('public'));
