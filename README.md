@@ -1,6 +1,6 @@
 # Browsing Linear Agents
 
-This repository contains a sample application for setting up and using Linear Agents. Linear Agents are app users that can be mentioned, assigned issues, and interact with Linear workspaces.
+This repository contains a TypeScript application for setting up and using Linear Agents. Linear Agents are app users that can be mentioned, assigned issues, and interact with Linear workspaces.
 
 ## Overview
 
@@ -12,7 +12,7 @@ Linear Agents allow you to build integrations that appear as users within Linear
 - Move issues between states
 - Receive webhook notifications for relevant events
 
-This sample application demonstrates how to:
+This application demonstrates how to:
 
 1. Set up a Linear OAuth application with agent capabilities
 2. Handle the OAuth flow for installation
@@ -21,7 +21,7 @@ This sample application demonstrates how to:
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v18 or higher)
 - npm or yarn
 - A Linear workspace where you have admin permissions
 
@@ -60,8 +60,14 @@ This sample application demonstrates how to:
 # Install dependencies
 npm install
 
+# Build the TypeScript code
+npm run build
+
 # Start the server
 npm start
+
+# For development with auto-reload
+npm run dev
 ```
 
 ### 4. Install the Agent
@@ -88,33 +94,57 @@ Once installed, your Linear Agent can:
 3. Check the server logs to see the webhook notifications
 4. Observe the agent's responses in Linear
 
-## Webhook Events
-
-The agent responds to the following webhook events:
-
-- `issueMention` - When the agent is mentioned in an issue
-- `issueCommentMention` - When the agent is mentioned in a comment
-- `issueAssignedToYou` - When an issue is assigned to the agent
-- `issueCommentReaction` - When someone reacts to a comment by the agent
-- `issueStatusChanged` - When an issue's status changes
-
 ## Development
 
 ### Project Structure
 
-- `src/index.js` - Main server file
-- `src/auth.js` - OAuth authentication handling
-- `src/webhooks.js` - Webhook processing
+- `src/index.ts` - Main server file
+- `src/auth.ts` - OAuth authentication handling
+- `src/webhooks.ts` - Webhook processing
+- `src/types/` - TypeScript type definitions
 - `public/` - Static files and frontend
-- `config/` - Configuration files
+- `tests/` - Test files
+
+### Running Tests
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+### Linting
+
+```bash
+# Run ESLint
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+```
 
 ### Adding New Features
 
 To extend the agent's capabilities:
 
-1. Add new webhook handlers in `src/webhooks.js`
+1. Add new webhook handlers in `src/webhooks.ts`
 2. Implement new Linear API interactions using the Linear SDK
 3. Update the frontend as needed
+4. Add tests for new functionality
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration. The CI pipeline:
+
+1. Builds the TypeScript code
+2. Runs linting checks
+3. Executes tests
+4. Reports test coverage
 
 ## Resources
 
