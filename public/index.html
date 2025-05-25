@@ -14,35 +14,66 @@
       padding: 20px;
     }
     h1 {
-      color: #5E6AD2;
+      color: #6C5CE7;
+      margin-bottom: 20px;
     }
     .card {
-      background-color: #f9f9f9;
+      background-color: #fff;
       border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       padding: 20px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .button {
+    .btn {
       display: inline-block;
-      background-color: #5E6AD2;
+      background-color: #6C5CE7;
       color: white;
       padding: 10px 20px;
       border-radius: 4px;
       text-decoration: none;
       font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #5A4FCF;
     }
     code {
-      background-color: #f0f0f0;
+      background-color: #f4f4f4;
       padding: 2px 4px;
       border-radius: 4px;
-      font-family: monospace;
+      font-family: 'Courier New', Courier, monospace;
     }
     pre {
-      background-color: #f0f0f0;
-      padding: 10px;
+      background-color: #f4f4f4;
+      padding: 15px;
       border-radius: 4px;
       overflow-x: auto;
+    }
+    .steps {
+      counter-reset: step-counter;
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .steps li {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 15px;
+    }
+    .steps li::before {
+      content: counter(step-counter);
+      counter-increment: step-counter;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 25px;
+      height: 25px;
+      background-color: #6C5CE7;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -51,45 +82,41 @@
   
   <div class="card">
     <h2>Welcome to the Linear Agent Setup</h2>
-    <p>This application helps you set up and configure a Linear Agent that can interact with your Linear workspace.</p>
-    <p>Linear Agents can:</p>
-    <ul>
-      <li>Be mentioned in issues and comments</li>
-      <li>Be assigned to issues</li>
-      <li>Create and reply to comments</li>
-      <li>Move issues between states</li>
-      <li>And much more!</li>
-    </ul>
-    <a href="/auth" class="button">Install Linear Agent</a>
+    <p>This application helps you set up a Linear Agent that can interact with your Linear workspace.</p>
+    <p>Linear Agents can be mentioned, assigned to issues, and respond to various events in your workspace.</p>
+    <a href="/auth" class="btn">Install Linear Agent</a>
   </div>
   
   <div class="card">
     <h2>Setup Instructions</h2>
-    <ol>
-      <li>Create a Linear OAuth application in your Linear workspace</li>
-      <li>Configure the application with the following settings:
-        <ul>
-          <li>Redirect URI: <code>http://localhost:3000/auth/callback</code></li>
-          <li>Enable webhooks and select "Inbox notifications"</li>
-        </ul>
-      </li>
-      <li>Copy your Client ID and Client Secret to your <code>.env</code> file</li>
-      <li>Start the server with <code>npm start</code></li>
+    <ol class="steps">
       <li>Click the "Install Linear Agent" button above</li>
+      <li>Authorize the application in Linear</li>
+      <li>After successful installation, you'll see your App User ID</li>
+      <li>Add this ID to your <code>.env</code> file as <code>LINEAR_APP_USER_ID</code></li>
+      <li>Restart the server</li>
     </ol>
   </div>
   
   <div class="card">
-    <h2>Environment Configuration</h2>
-    <p>Make sure to set up your <code>.env</code> file with the following variables:</p>
-    <pre>
-LINEAR_CLIENT_ID=your_client_id
+    <h2>Using Your Agent</h2>
+    <p>Once installed, you can:</p>
+    <ul>
+      <li>Mention the agent in issues and comments using <code>@YourAgentName</code></li>
+      <li>Assign issues to the agent</li>
+      <li>The agent will respond based on the configured handlers</li>
+    </ul>
+  </div>
+  
+  <div class="card">
+    <h2>Configuration</h2>
+    <p>Make sure your <code>.env</code> file contains the following:</p>
+    <pre>LINEAR_CLIENT_ID=your_client_id
 LINEAR_CLIENT_SECRET=your_client_secret
 LINEAR_REDIRECT_URI=http://localhost:3000/auth/callback
 LINEAR_WEBHOOK_SECRET=your_webhook_secret
-PORT=3000
-NODE_ENV=development
-    </pre>
+LINEAR_APP_USER_ID=app_user_id_after_installation
+LINEAR_TOKEN=your_access_token</pre>
   </div>
 </body>
 </html>
