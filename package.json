@@ -1,0 +1,31 @@
+{
+  "name": "browsing-linear-agents",
+  "version": "1.0.0",
+  "description": "A Linear Agents application for browsing and integration",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "linear",
+    "agents",
+    "api",
+    "integration"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@linear/sdk": "^2.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22"
+  },
+  "type": "module"
+}
+
