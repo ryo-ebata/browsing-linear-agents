@@ -3,7 +3,7 @@ import { Request } from 'express';
 export interface TokenData {
   access_token: string;
   organization_id: string;
-  [key: string]: any;
+  error?: string;
 }
 
 export interface Tokens {
@@ -11,43 +11,37 @@ export interface Tokens {
 }
 
 export interface AppUserNotification {
-  type: string;
+  id: string;
   action: NotificationType;
-  createdAt: string;
   organizationId: string;
   oauthClientId: string;
   appUserId: string;
-  notification: Notification;
+  userId: string;
+  issue?: {
+    id: string;
+    title?: string;
+  };
+  comment?: {
+    id: string;
+    body?: string;
+  };
 }
 
 export enum NotificationType {
   IssueMention = 'issueMention',
   IssueCommentMention = 'issueCommentMention',
   IssueAssignedToYou = 'issueAssignedToYou',
-  IssueUnassignedFromYou = 'issueUnassignedFromYou',
-  IssueNewComment = 'issueNewComment',
   IssueStatusChanged = 'issueStatusChanged',
-  IssueEmojiReaction = 'issueEmojiReaction',
   IssueCommentReaction = 'issueCommentReaction'
 }
 
-export interface Notification {
-  id: string;
-  issue?: {
-    id: string;
-    title?: string;
-    [key: string]: any;
-  };
-  comment?: {
-    id: string;
-    body?: string;
-    [key: string]: any;
-  };
-  [key: string]: any;
-}
-
 export interface WebhookRequest extends Request {
-  body: AppUserNotification;
+  body: {
+    type: string;
+    organizationId: string;
+    appUserId: string;
+    notification: AppUserNotification;
+  };
   headers: {
     'linear-signature'?: string;
     [key: string]: string | string[] | undefined;
