@@ -2,7 +2,7 @@ import { Express, Request, Response } from 'express';
 import { LinearClient } from '@linear/sdk';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
-import { Tokens, TokenData } from './types/index.js';
+import { Tokens, TokenData } from './types/index.ts';
 
 dotenv.config();
 
@@ -54,7 +54,7 @@ export function setupAuthRoutes(app: Express): void {
         })
       });
 
-      const tokenData = await tokenResponse.json() as TokenData;
+      const tokenData = await tokenResponse.tson() as TokenData;
       
       if ('error' in tokenData) {
         return res.status(400).send(`Error: ${tokenData.error}`);
@@ -96,10 +96,10 @@ export function setupAuthRoutes(app: Express): void {
     const token = tokens[orgId];
     
     if (!token) {
-      return res.status(404).json({ error: 'Token not found for this organization' });
+      return res.status(404).tson({ error: 'Token not found for this organization' });
     }
     
-    res.json({ token });
+    res.tson({ token });
   });
 }
 

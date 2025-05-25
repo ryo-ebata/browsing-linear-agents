@@ -3,11 +3,11 @@ import request from 'supertest';
 import app from './index';
 
 // Mock the auth and webhook modules
-vi.mock('./auth.js', () => ({
+vi.mock('./auth.ts', () => ({
   setupAuthRoutes: vi.fn()
 }));
 
-vi.mock('./webhooks.js', () => ({
+vi.mock('./webhooks.ts', () => ({
   handleWebhook: vi.fn((req, res) => res.status(200).send('Webhook processed'))
 }));
 

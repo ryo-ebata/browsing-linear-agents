@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Response } from 'express';
 import { LinearClient } from '@linear/sdk';
 import dotenv from 'dotenv';
-import { WebhookRequest, Notification, NotificationType } from './types/index.js';
+import { WebhookRequest, Notification, NotificationType } from './types/index.ts';
 
 dotenv.config();
 

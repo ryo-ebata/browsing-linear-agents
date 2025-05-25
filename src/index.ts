@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { handleWebhook } from './webhooks.js';
-import { setupAuthRoutes } from './auth.js';
+import { handleWebhook } from './webhooks.ts';
+import { setupAuthRoutes } from './auth.ts';
 
 // Load environment variables
 dotenv.config();
@@ -10,7 +10,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Parse JSON request bodies
-app.use(express.json());
+app.use(express.tson());
 
 // Serve static files from the public directory
 app.use(express.static('public'));
@@ -35,4 +35,3 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
-
